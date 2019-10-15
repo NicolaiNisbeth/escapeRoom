@@ -1,4 +1,4 @@
-So in your design somehow the arriving group can wake up the instructor.
+So in your design somehow the arriving queue can wake up the instructor.
 
 What if you change the design slightly and say that there are 2 identical escape rooms (code here becomes critical section)
 and it takes random time for the instructor(resource similar to global variable) to give clues(which are similar for both rooms)
@@ -12,7 +12,7 @@ which is common for both groups (I hope it makes sense otherwise please ask ques
 --------------------------------------------------------------------------------------------------------------------
 Flow
 
-group(thread) enters and enqueues
+queue(thread) enters and enqueues
 When queue size >= 2
     then instructor welcomes two groups to their respective escape room, inEscapeRoom=true and 2x dequeue and assigns a team odd and team even
     else sleep

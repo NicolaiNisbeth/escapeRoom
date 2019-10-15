@@ -1,5 +1,8 @@
 
-//gcc -Wall -pthread
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
+
+
 #define MAX 20
 #include <stdio.h>
 #include <unistd.h>
@@ -20,9 +23,9 @@ int clientWait;
 
 #define NUM_GROUPS 4
 #define NUM_INSTRUCTORS 1
-#define NUM_CHAIRS 4
+#define NUM_CHAIRS 2
 
-int curChairs = 4;
+int freeChairs = 2;
 struct Instructor instructor[1];
 struct Group grp[MAX];
 
@@ -31,10 +34,8 @@ int main(int argc, char *argv[]) {
 
     printf("Main thread beginning\n");
     /* 1. Get command line arguments */
-    int runTime,clients;
     struct Group group = init();
 
-    runTime = 30;
     clientWait = 2;
 
     /* 2. Initialize semaphores */
@@ -52,16 +53,24 @@ int main(int argc, char *argv[]) {
     /* 4. Create group threads.  */
     for (int i = 0, j = 'A'; i < NUM_GROUPS; i++, j++){
         grp[i].name = (char) j;
+        //sleep(1);
         pthread_create(&grp[i].id, NULL, client, NULL);
         //enqueue(grp[i]);
         printf("Spawning group %c\n", grp[i].name);
     }
 
+    //for (int i = 0; i < NUM_INSTRUCTORS; i++) pthread_join(instructor[i].id, NULL);
+    for (int i = 0; i < NUM_GROUPS; i++) pthread_join(grp[i].id, NULL);
+
+
+
+
+
     /* 5. Sleep. */
-    printf("Main thread sleeping for %d seconds\n", runTime);
-    sleep(runTime);
+    //printf("Main thread sleeping for %d seconds\n", runTime);
+    //sleep(runTime);
     /* 6. Exit.  */
-    printf("Main thread exiting\n");
+    //printf("Main thread exiting\n");
     exit(0);
 }
 
@@ -77,24 +86,28 @@ void *barber(void *param) {
     //struct Group g = dequeue();
 
     while(1) {
-        /* wait for a client to become available (sem_client) */
+
+        sem_wait(&chairs_mutex);    // wait for mutex to access chair count
+        freeChairs++;
+        sem_post(&chairs_mutex);    // free mutex lock on chair count
+
+        // wait for group to become available
         sem_wait(&sem_client);
-        /* wait for mutex to access chair count (chair_mutex) */
-        sem_wait(&chairs_mutex);
-        /* increment number of chairs available */
-        curChairs += 1;
+
         //struct Group g = dequeue();
-        //printf("Instructor %s welcoming %c. Number of chairs available = %d/%d\n", ins->name, g.name, curChairs, NUM_CHAIRS);
-        printf("Instructor %s welcoming ___. Number of chairs available = %d/%d\n", ins->name, curChairs, NUM_CHAIRS);
+        //printf("Instructor %s welcoming %c. Number of chairs available = %d/%d\n", ins->name, g.name, freeChairs, NUM_CHAIRS);
+        printf("Instructor %s welcoming ___.\t\t\t\t\tFree chairs = %d/%d\n", ins->name, freeChairs, NUM_CHAIRS);
+
+
         /* signal to client that barber is ready to cut their hair (sem_barber) */
         sem_post(&sem_barber);
         /* give up lock on chair count */
-        sem_post(&chairs_mutex);
         /* generate random number, worktime, from 1-4 seconds for length of haircut.  */
         ins->sleepTime = (rand() % 4) + 1;
         /* cut hair for worktime seconds (really just call sleep()) */
-        printf("Instructor instructing for %d seconds\n", ins->sleepTime);
         sleep(ins->sleepTime);
+        printf("Instructor kicks ___ out of room\n");
+        //printf("Instructor instructing for %d seconds\n", ins->sleepTime);
     }
 }
 
@@ -106,39 +119,37 @@ struct Group *getGroup(pthread_t self) {
 }
 
 void *client(void *param) {
-    int waittime;
-
     struct Group *g = getGroup(pthread_self());
 
     while(1) {
-        /* wait for mutex to access chair count (chair_mutex) */
-        sem_wait(&chairs_mutex);
-        /* if there are no chairs */
-        if(curChairs <= 0){
-            /* free mutex lock on chair count */
-            printf("Group %c leaving with no instruction\n", g->name);
-            sem_post(&chairs_mutex);
-        }
-            /* else if there are chairs */
-        else{
-            /* decrement number of chairs available */
-            curChairs -= 1;
-            printf("Group %c goes to waiting room. Number of chairs = %d/%d\n", g->name, curChairs, NUM_CHAIRS);
-            /* signal that a customer is ready (sem_client) */
+        sem_wait(&chairs_mutex);        // wait for mutex to access chair count
+
+        if (freeChairs){
+            freeChairs--;
+            sem_post(&chairs_mutex);    // free mutex lock on chair count
+
+            printf("Group %c takes a chair in waiting room.\t\t\tFree chairs = %d/%d\n", g->name, freeChairs, NUM_CHAIRS);
+
+            // increment semaphore to show that group is ready
             sem_post(&sem_client);
-            /* free mutex lock on chair count */
-            sem_post(&chairs_mutex);
-            /* wait for barber (sem_barber) */
+
+            // wait for instructor
             sem_wait(&sem_barber);
-            /* get haircut */
-            printf("Group %c getting instructed\n",g->name);
+
+            printf("Group %c is taken to escape room\n",g->name);
+
+            pthread_exit(&g->id);
         }
-        /* generate random number, waittime, for length of wait until next haircut or next try.  Max value from command line. */
-        waittime = (rand() % clientWait) + 1;
-        /* sleep for waittime seconds */
-        printf("Group %c waiting %d seconds before reaching out to instructor\n", g->name, waittime);
-        sleep(waittime);
+        else {
+            // free mutex lock on chair count
+            printf("Group %c is leaving without instruction\n", g->name);
+            sem_post(&chairs_mutex);
+            pthread_exit(&g->id);
+        }
+
     }
 }
 
 
+
+#pragma clang diagnostic pop

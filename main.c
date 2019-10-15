@@ -16,10 +16,9 @@ void *barber(void *param);
 struct Instructor *getInstructor(pthread_t self);
 struct Group *getGroup(pthread_t self);
 
-sem_t chairs_mutex;
-sem_t sem_client;
-sem_t sem_barber;
-int clientWait;
+sem_t mutex_chairs;
+sem_t sem_group;
+sem_t sem_instructor;
 
 #define NUM_GROUPS 4
 #define NUM_INSTRUCTORS 1
@@ -36,12 +35,10 @@ int main(int argc, char *argv[]) {
     /* 1. Get command line arguments */
     struct Group group = init();
 
-    clientWait = 2;
-
     /* 2. Initialize semaphores */
-    sem_init(&chairs_mutex,0,1);
-    sem_init(&sem_client,0,0);
-    sem_init(&sem_barber,0,0);
+    sem_init(&mutex_chairs, 0, 1);
+    sem_init(&sem_group, 0, 0);
+    sem_init(&sem_instructor, 0, 0);
 
     /* 3. Create instructor thread. */
     for (int i = 0; i < NUM_INSTRUCTORS; i++){
@@ -51,9 +48,9 @@ int main(int argc, char *argv[]) {
     }
 
     /* 4. Create group threads.  */
-    for (int i = 0, j = 'A'; i < NUM_GROUPS; i++, j++){
-        grp[i].name = (char) j;
-        //sleep(1);
+    for (int i = 0, letter = 'A'; i < NUM_GROUPS; i++, letter++){
+        grp[i].name = (char) letter;
+        //sleep(rand() % 4 + 1);
         pthread_create(&grp[i].id, NULL, client, NULL);
         //enqueue(grp[i]);
         printf("Spawning group %c\n", grp[i].name);
@@ -86,28 +83,22 @@ void *barber(void *param) {
     //struct Group g = dequeue();
 
     while(1) {
+        sem_wait(&sem_group);      // wait for group to become available
 
-        sem_wait(&chairs_mutex);    // wait for mutex to access chair count
+        sem_wait(&mutex_chairs);    // wait for mutex to access chair count
         freeChairs++;
-        sem_post(&chairs_mutex);    // free mutex lock on chair count
-
-        // wait for group to become available
-        sem_wait(&sem_client);
 
         //struct Group g = dequeue();
         //printf("Instructor %s welcoming %c. Number of chairs available = %d/%d\n", ins->name, g.name, freeChairs, NUM_CHAIRS);
-        printf("Instructor %s welcoming ___.\t\t\t\t\tFree chairs = %d/%d\n", ins->name, freeChairs, NUM_CHAIRS);
+        printf("Instructor %s welcomes ___.\t\t\t\t\tFree chairs = %d/%d\n", ins->name, freeChairs, NUM_CHAIRS);
 
+        sem_post(&sem_instructor);  // instructor signals to group that he is ready
+        sem_post(&mutex_chairs);    // free mutex lock on chair count
 
-        /* signal to client that barber is ready to cut their hair (sem_barber) */
-        sem_post(&sem_barber);
-        /* give up lock on chair count */
-        /* generate random number, worktime, from 1-4 seconds for length of haircut.  */
+        // random number from 1-4 seconds for length of escape room.
         ins->sleepTime = (rand() % 4) + 1;
-        /* cut hair for worktime seconds (really just call sleep()) */
         sleep(ins->sleepTime);
         printf("Instructor kicks ___ out of room\n");
-        //printf("Instructor instructing for %d seconds\n", ins->sleepTime);
     }
 }
 
@@ -122,19 +113,17 @@ void *client(void *param) {
     struct Group *g = getGroup(pthread_self());
 
     while(1) {
-        sem_wait(&chairs_mutex);        // wait for mutex to access chair count
+        sem_wait(&mutex_chairs);        // wait for mutex to access chair count
 
         if (freeChairs){
             freeChairs--;
-            sem_post(&chairs_mutex);    // free mutex lock on chair count
 
             printf("Group %c takes a chair in waiting room.\t\t\tFree chairs = %d/%d\n", g->name, freeChairs, NUM_CHAIRS);
 
-            // increment semaphore to show that group is ready
-            sem_post(&sem_client);
+            sem_post(&sem_group);       // increment semaphore to show that group is ready
+            sem_post(&mutex_chairs);    // free mutex lock on chair count
 
-            // wait for instructor
-            sem_wait(&sem_barber);
+            sem_wait(&sem_instructor);  // wait for instructor
 
             printf("Group %c is taken to escape room\n",g->name);
 
@@ -142,8 +131,8 @@ void *client(void *param) {
         }
         else {
             // free mutex lock on chair count
+            sem_post(&mutex_chairs);
             printf("Group %c is leaving without instruction\n", g->name);
-            sem_post(&chairs_mutex);
             pthread_exit(&g->id);
         }
 

@@ -2,8 +2,6 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
 
-
-#define MAX 20
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -13,8 +11,8 @@
 
 void *client(void *param);
 void *barber(void *param);
-struct Instructor *getInstructor(pthread_t self);
-struct Group *getGroup(pthread_t self);
+struct Instructor *getInstructor(pthread_t pID);
+struct Group *getGroup(pthread_t pID);
 
 sem_t mutex_chairs;
 sem_t sem_group;
@@ -25,58 +23,38 @@ sem_t sem_instructor;
 #define NUM_CHAIRS 2
 
 int freeChairs = 2;
-struct Instructor instructor[1];
-struct Group grp[MAX];
+struct Instructor instructor[NUM_INSTRUCTORS];
+struct Group group[NUM_GROUPS];
 
 int main(int argc, char *argv[]) {
 
-
-    printf("Main thread beginning\n");
-    /* 1. Get command line arguments */
-    struct Group group = init();
-
-    /* 2. Initialize semaphores */
+    // Initialize semaphores
     sem_init(&mutex_chairs, 0, 1);
     sem_init(&sem_group, 0, 0);
     sem_init(&sem_instructor, 0, 0);
 
-    /* 3. Create instructor thread. */
+    // Create instructor thread
     for (int i = 0; i < NUM_INSTRUCTORS; i++){
         instructor[i].name = "Linda";
         pthread_create(&instructor[i].id, NULL, barber, NULL);
         printf("Spawning instructor %s\n", instructor[i].name);
     }
 
-    /* 4. Create group threads.  */
+    // Create group threads
     for (int i = 0, letter = 'A'; i < NUM_GROUPS; i++, letter++){
-        grp[i].name = (char) letter;
-        //sleep(rand() % 4 + 1);
-        pthread_create(&grp[i].id, NULL, client, NULL);
-        //enqueue(grp[i]);
-        printf("Spawning group %c\n", grp[i].name);
+        group[i].name = (char) letter;
+        pthread_create(&group[i].id, NULL, client, NULL);
+        //enqueue(group[i]);
+        printf("Spawning group %c\n", group[i].name);
     }
 
     //for (int i = 0; i < NUM_INSTRUCTORS; i++) pthread_join(instructor[i].id, NULL);
-    for (int i = 0; i < NUM_GROUPS; i++) pthread_join(grp[i].id, NULL);
+    for (int i = 0; i < NUM_GROUPS; i++) pthread_join(group[i].id, NULL);
 
-
-
-
-
-    /* 5. Sleep. */
-    //printf("Main thread sleeping for %d seconds\n", runTime);
-    //sleep(runTime);
-    /* 6. Exit.  */
-    //printf("Main thread exiting\n");
     exit(0);
 }
 
-struct Instructor *getInstructor(pthread_t self) {
-    for (int i = 0; i < NUM_INSTRUCTORS; ++i) {
-        if (instructor[i].id == self)
-            return &instructor[i];
-    }
-}
+
 
 void *barber(void *param) {
     struct Instructor *ins = getInstructor(pthread_self());
@@ -102,12 +80,7 @@ void *barber(void *param) {
     }
 }
 
-struct Group *getGroup(pthread_t self) {
-    for (int i = 0; i < NUM_GROUPS; ++i) {
-        if (grp[i].id == self)
-            return &grp[i];
-    }
-}
+
 
 void *client(void *param) {
     struct Group *g = getGroup(pthread_self());
@@ -131,14 +104,26 @@ void *client(void *param) {
         }
         else {
             // free mutex lock on chair count
-            sem_post(&mutex_chairs);
             printf("Group %c is leaving without instruction\n", g->name);
+            sem_post(&mutex_chairs);
             pthread_exit(&g->id);
         }
 
     }
 }
 
+struct Instructor *getInstructor(pthread_t pID) {
+    for (int i = 0; i < NUM_INSTRUCTORS; ++i) {
+        if (instructor[i].id == pID)
+            return &instructor[i];
+    }
+}
 
+struct Group *getGroup(pthread_t pID) {
+    for (int i = 0; i < NUM_GROUPS; ++i) {
+        if (group[i].id == pID)
+            return &group[i];
+    }
+}
 
 #pragma clang diagnostic pop

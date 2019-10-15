@@ -13,7 +13,7 @@
 
 int head, tail, currentSize;
 
-struct Group queue[] = {};
+struct Group queue[SIZE];
 
 struct Group init();
 int enqueue(struct Group element);

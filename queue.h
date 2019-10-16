@@ -20,6 +20,8 @@ int isEmpty(Queue *queue);
 
 /**
  * Initialise queue
+ * @param size
+ * @return queue
  */
 Queue *initQueue(int size){
     Queue *queue = (Queue *) malloc(sizeof(Queue));
@@ -35,17 +37,16 @@ Queue *initQueue(int size){
 
 
 /**
- * Enqueue element to head
+ * Enqueue element to tail in queue
  * @param queue
  * @param element
  */
 void enqueue(Queue *queue, Group element){
-    //sem_wait(queue->counter);
     sem_wait(queue->mutex);
 
     if (isFull(queue)){
         sem_post(queue->mutex);
-        perror("queue is full!");
+        perror("queue is full!"), exit(1);
     }
     else {
         queue->array[queue->tail] = element;
@@ -53,30 +54,27 @@ void enqueue(Queue *queue, Group element){
         queue->counter++;
 
         sem_post(queue->mutex);
-        //sem_post(queue->groups);
     }
 }
 
 
 /**
- * Dequeue element from tail
+ * Dequeue element from head
  * @param queue
  * @return dequeued element
  */
 Group dequeue(Queue *queue){
-    //sem_wait(queue->groups);
     sem_wait(queue->mutex);
 
     if (isEmpty(queue)){
         sem_post(queue->mutex);
-        perror("queue is empty!");
+        perror("queue is empty!"), exit(1);
     }
     else {
         Group element = queue->array[queue->head];
         queue->head = queueIncr(queue, queue->head);
         queue->counter--;
         sem_post(queue->mutex);
-        //sem_post(queue->counter);
 
         return element;
     }

@@ -1,12 +1,12 @@
-So in your design somehow the arriving queue can wake up the instructor.
+So in your design somehow the arriving queue can wake up the instructors.
 
 What if you change the design slightly and say that there are 2 identical escape rooms (code here becomes critical section)
-and it takes random time for the instructor(resource similar to global variable) to give clues(which are similar for both rooms)
+and it takes random time for the instructors(resource similar to global variable) to give clues(which are similar for both rooms)
 multiple times during the escape room game.
 
-The clues the instructor provides are sequential and if the one room gets the clues earlier the game is spoiled
+The clues the instructors provides are sequential and if the one room gets the clues earlier the game is spoiled
 (race condition – similar to example shown in class with integer writing 21 instead of 40).
-The groups can check if the instructor is available book him for instruction (lock the instructor - some piece of code)
+The groups can check if the instructors is available book him for instruction (lock the instructors - some piece of code)
 which is common for both groups (I hope it makes sense otherwise please ask questions if anything is unclear)
 
 --------------------------------------------------------------------------------------------------------------------
@@ -14,10 +14,10 @@ Flow
 
 queue(thread) enters and enqueues
 When queue size >= 2
-    then instructor welcomes two groups to their respective escape room, inEscapeRoom=true and 2x dequeue and assigns a team odd and team even
+    then instructors welcomes two groups to their respective escape room, inEscapeRoom=true and 2x dequeue and assigns a team odd and team even
     else sleep
 
-While instructor gives clues (changes global variable)
+While instructors gives clues (changes global variable)
     if teamOdd reads and even or teamEven reads and odd, then the teams lost (Each team is not supposed to read the same clues!)
     else they won
 

@@ -2,14 +2,15 @@
 // Created by nicolainisbeth on 15/10/2019.
 //
 
-#ifndef ESCAPEROOM_TYPE_H
-#define ESCAPEROOM_TYPE_H
+#ifndef ESCAPEROOM_OBJECTS_H
+#define ESCAPEROOM_OBJECTS_H
 
 typedef struct {
     pthread_t id;
     char name;
     int inEscapeRoom;
 } Group;
+
 
 typedef struct {
     pthread_t id;
@@ -18,13 +19,13 @@ typedef struct {
 } Instructor;
 
 typedef struct {
-    int *array;
+    Group *array;
     int size;
     int head;
     int tail;
+    int counter;
     sem_t *mutex;
     sem_t *groups;
-    sem_t *counter;
 } Queue;
 
-#endif //ESCAPEROOM_TYPE_H
+#endif //ESCAPEROOM_OBJECTS_H

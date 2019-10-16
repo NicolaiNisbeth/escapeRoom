@@ -14,10 +14,10 @@ void *barber(void *param);
 Instructor * getInstructor(pthread_t pID);
 Group * getGroup(pthread_t pID);
 
-#define NUM_GROUPS 12
+#define NUM_CHAIRS 1
+#define NUM_GROUPS 2
 #define NUM_INSTRUCTORS 1
-#define NUM_CHAIRS 6
-#define GROUPS_PR_INSTRUCTOR 2
+#define GROUPS_PR_INSTRUCTOR 1
 
 sem_t mutex_chairs;
 sem_t mutex_groups;
@@ -25,11 +25,12 @@ sem_t sem_instructor;
 
 int freeChairs = NUM_CHAIRS;
 int availableGroups = 0;
+Queue queue;
 Instructor instructor[NUM_INSTRUCTORS];
 Group group[NUM_GROUPS];
 
 int main(int argc, char *argv[]) {
-    Queue queue = *initQueue(NUM_CHAIRS);
+    queue = *initQueue(NUM_CHAIRS);
 
     // Initialize semaphores
     sem_init(&mutex_chairs,0,1);
@@ -48,8 +49,6 @@ int main(int argc, char *argv[]) {
         group[i].name = (char) name;
         sleep(rand() % 4);
         pthread_create(&group[i].id, NULL, client, NULL);
-        //enqueue(&queue, group[i].id);
-
         //printf("Spawning group %c\n", group[i].name);
     }
 
@@ -71,12 +70,13 @@ void *barber(void *param) {
             availableGroups -= GROUPS_PR_INSTRUCTOR;
             sem_post(&mutex_groups);
 
-
             sem_wait(&mutex_chairs);    // wait for mutex to access chair count
-            freeChairs += GROUPS_PR_INSTRUCTOR;
 
-            printf("Instructor %s takes group ___ & ___\t\t\tFree chairs = %d/%d\n", ins->name, freeChairs, NUM_CHAIRS);
+            Group inTheEscapeRoom[GROUPS_PR_INSTRUCTOR];
             for (int i = 0; i < GROUPS_PR_INSTRUCTOR; i++){
+                freeChairs++;
+                inTheEscapeRoom[i] = dequeue(&queue);
+                printf("Instructor %s welcomes %c to the escape room\tFree chairs = %d/%d\n", ins->name, inTheEscapeRoom[i].name, freeChairs, NUM_CHAIRS);
                 sem_post(&sem_instructor);  // instructor signals to group that he is ready
             }
 
@@ -86,7 +86,7 @@ void *barber(void *param) {
             ins->sleepTime = (rand() % 5) + 4;
             sleep(ins->sleepTime);
 
-            printf("Instructor kicks ___ & ___ out of room\n");
+            printf("Instructor kicks group %c and group %c out of room\n", inTheEscapeRoom[0].name, inTheEscapeRoom[1].name);
         }
         else {
             sem_post(&mutex_groups);
@@ -100,13 +100,14 @@ void *client(void *param) {
     while(1) {
         sem_wait(&mutex_chairs);        // wait for mutex to access chair count
 
-        if (freeChairs){
+        if (freeChairs > 0){
             freeChairs--;
             printf("Group %c takes a chair in waiting room.\t\t\tFree chairs = %d/%d\n", g->name, freeChairs, NUM_CHAIRS);
             sem_post(&mutex_chairs);    // free mutex lock on chair count
 
             sem_wait(&mutex_groups);
-            availableGroups++;          // announcing its arrival
+            availableGroups++;          // announcing group's arrival
+            enqueue(&queue, *g);
             sem_post(&mutex_groups);
 
             sem_wait(&sem_instructor);  // wait for instructor
@@ -132,7 +133,6 @@ Instructor * getInstructor(pthread_t pID) {
     for (int i = 0; i < NUM_INSTRUCTORS; ++i) if (instructor[i].id == pID){
             return &instructor[i];
         }
-
 }
 
 Group * getGroup(pthread_t pID) {

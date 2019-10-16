@@ -4,4 +4,4 @@ project(escapeRoom C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS -pthread)
 
-add_executable(escapeRoom main.c queueImplementation.h type.h queue.h)
+add_executable(escapeRoom main.c queueImplementation.h objects.h queue.h)

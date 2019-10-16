@@ -13,18 +13,18 @@
 
 int head, tail, currentSize;
 
-struct Group queue[SIZE];
+Group queue[SIZE];
 
-struct Group init();
-int enqueue(struct Group element);
-struct Group dequeue();
+Group init();
+int enqueue(Group element);
+Group dequeue();
 int isEmpty();
 int isFull();
 
 /**
  * Initialise queue
  */
-struct Group init(){
+Group init(){
     head = 0;
     tail = 0;
     currentSize = 0;
@@ -35,7 +35,7 @@ struct Group init(){
  * @param element
  * @return 0 if exception else 1
  */
-int enqueue(struct Group element){
+int enqueue(Group element){
     if (isFull()) return 0;                     // overflow
 
     queue[tail] = element;
@@ -49,8 +49,8 @@ int enqueue(struct Group element){
  * Dequeue element from tail
  * @return 0 if exception else dequeued element
  */
-struct Group dequeue(){
-    struct Group dequeuedElement;
+Group dequeue(){
+    Group dequeuedElement;
 
     if (isEmpty()) {                           // underflow
         dequeuedElement.id = (pthread_t) NULL;

@@ -5,106 +5,111 @@
 #ifndef ESCAPEROOM_QUEUE_H
 #define ESCAPEROOM_QUEUE_H
 #include "objects.h"
-#include "queueImplementation.h"
 #include <stdlib.h>
 #include <semaphore.h>
 #include <pthread.h>
 
-
-int queueIncr(Queue *queue, int i);
-sem_t *makeSemaphore(int value);
-void enqueue(Queue *queue, Group element);
-Group dequeue(Queue *queue);
-int isFull(Queue *queue);
-int isEmpty(Queue *queue);
+int queue_incr(Queue *queue, int val);
+void take_chair(Queue *queue, Group group);
+Group leave_chair(Queue *queue);
+int full(Queue *queue);
+int empty(Queue *queue);
+sem_t* createSemaphore(int value);
 
 /**
  * Initialise queue
  * @param size
  * @return queue
  */
-Queue *initQueue(int size){
+Queue* init_queue(int size){
     Queue *queue = (Queue *) malloc(sizeof(Queue));
     queue->size = size;
     queue->array = (Group *) malloc(size * sizeof(Group));
     queue->head = 0;
     queue->tail = 0;
-    queue->counter = 0;
-    queue->mutex = makeSemaphore(1);
-    queue->groups = makeSemaphore(0);
+    queue->taken = 0;
+    queue->mutex = createSemaphore(1);
     return queue;
 }
-
 
 /**
  * Enqueue element to tail in queue
  * @param queue
- * @param element
+ * @param group
  */
-void enqueue(Queue *queue, Group element){
+void take_chair(Queue *queue, Group group){
     sem_wait(queue->mutex);
 
-    if (isFull(queue)){
+    if (full(queue)){
         sem_post(queue->mutex);
-        perror("queue is full!"), exit(1);
+        perror("chair is already full!"), exit(1);
     }
     else {
-        queue->array[queue->tail] = element;
-        queue->tail = queueIncr(queue, queue->tail);
-        queue->counter++;
+        queue->array[queue->tail] = group;
+        queue->tail = queue_incr(queue, queue->tail);
+        queue->taken++;
 
         sem_post(queue->mutex);
     }
 }
-
 
 /**
  * Dequeue element from head
  * @param queue
  * @return dequeued element
  */
-Group dequeue(Queue *queue){
+Group leave_chair(Queue *queue){
     sem_wait(queue->mutex);
 
-    if (isEmpty(queue)){
+    if (empty(queue)){
         sem_post(queue->mutex);
-        perror("queue is empty!"), exit(1);
+        perror("Chair is already empty!"), exit(1);
     }
     else {
         Group element = queue->array[queue->head];
-        queue->head = queueIncr(queue, queue->head);
-        queue->counter--;
+        queue->head = queue_incr(queue, queue->head);
+        queue->taken--;
         sem_post(queue->mutex);
 
         return element;
     }
-
 }
 
-sem_t *makeSemaphore(int value){
-    sem_t *sem = malloc(sizeof(sem_t));
-    sem_init(sem, 0, value);
-    return sem;
-}
-
-int queueIncr(Queue *queue, int i) {
-    return (i+1) % queue->size;
+/**
+ * Increments current value and returns updated value
+ * @param queue
+ * @param val current value
+ * @return updated value
+ */
+int queue_incr(Queue *queue, int val) {
+    return (val + 1) % queue->size;
 }
 
 /**
  * Check if queue is full
- * @return 1 if successful else 0
+ * @return 1 if full else 0
  */
-int isFull(Queue *queue){
-    return queue->counter == queue->size;
+int full(Queue *queue){
+    return queue->taken == queue->size;
 }
 
 /**
  * Check if queue is empty
- * @return 1 if successful else 0
+ * @return 1 if empty else 0
  */
-int isEmpty(Queue *queue){
-    return queue->counter == 0;
+int empty(Queue *queue){
+    return queue->taken == 0;
+}
+
+/**
+ * Creates a semaphore by allocating memory and initializing it.
+ * @param value
+ * @return pointer to initialised semaphore
+ */
+sem_t* createSemaphore(int value){
+    sem_t *sem = malloc(sizeof(sem_t));
+    sem_init(sem, 0, value);
+    return sem;
 }
 
 #endif //ESCAPEROOM_QUEUE_H

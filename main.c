@@ -1,5 +1,3 @@
-
-#pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
 #include <stdio.h>
 #include <unistd.h>
@@ -8,17 +6,16 @@
 #include <semaphore.h>
 #include <string.h>
 #include "queue.h"
+#include "stringStore.h"
 
 /** Conditions
  * NUM_CHAIRS   >=  GROUPS_PR_INSTRUCTOR
- * NUM_CHAIRS   %   GROUPS_PR_INSTRUCTOR == 0
- *
  * NUM_GROUPS   >=  GROUPS_PR_INSTRUCTOR
- * NUM_GROUPS   %   GROUPS_PR_INSTRUCTOR == 0
  *
  * NUM_INSTRUCTORS = 1
  */
-#define NUM_CHAIRS 4
+
+#define NUM_CHAIRS 2
 #define NUM_GROUPS 12
 #define GROUPS_PR_INSTRUCTOR 2
 #define ANSWERS_PR_GROUP 2
@@ -33,10 +30,8 @@ sem_t availableInstructor, mysteryKey, submission, mutex;
 
 void *group_behaviour(void *param);
 void *instructor_behaviour(void *param);
-Instructor * getInstructor(pthread_t pID);
-Group * getGroup(pthread_t pID);
-
-
+Instructor *getInstructor(pthread_t pID);
+Group *getGroup(pthread_t pID);
 void goodbye(char *status, Group *group);
 
 int main(int argc, char *argv[]) {
@@ -50,7 +45,7 @@ int main(int argc, char *argv[]) {
 
     // Create instructors' thread
     for (int i = 0; i < NUM_INSTRUCTORS; i++){
-        instructors[i].name = "Linda";
+        instructors[i].name = &NAMES[0][i];
         pthread_create(&instructors[i].id, NULL, instructor_behaviour, NULL);
     }
 
@@ -62,7 +57,6 @@ int main(int argc, char *argv[]) {
     }
 
     for (int i = 0; i < NUM_GROUPS; i++) pthread_join(groups[i].id, NULL);
-    for (int i = 0; i < NUM_INSTRUCTORS; i++) pthread_join(instructors[i].id, NULL);
 
     exit(0);
 }
@@ -81,7 +75,7 @@ void *instructor_behaviour(void *param) {
             // Invite n groups to escape room
             for (int i = 0; i < GROUPS_PR_INSTRUCTOR; i++){
                 inEscapeRoom[i] = leave_chair(&chairs);
-                printf("Instructor %s welcomes %c to the escape room\t\tTaken chairs = %d/%d\n", instructor->name, inEscapeRoom[i].name, chairs.taken, NUM_CHAIRS);
+                printf(INSTRUCTOR_MSG, instructor->name, inEscapeRoom[i].name, chairs.taken, NUM_CHAIRS);
                 sem_post(&availableInstructor);  // Becomes available to a group
             }
 
@@ -92,9 +86,9 @@ void *instructor_behaviour(void *param) {
             while (submission.__align != GROUPS_PR_INSTRUCTOR);
 
             // say goodbye to groups
-            (mystery == SOLUTION) ? goodbye("winner", inEscapeRoom) : goodbye("loser", inEscapeRoom);
+            (mystery == SOLUTION) ? goodbye(WINNER, inEscapeRoom) : goodbye(LOSER, inEscapeRoom);
 
-            // Clean and prepare escape room for next groups
+            // Clean and prepare escape room for future groups
             sem_wait(&mysteryKey);
             mystery = ANSWERS_PR_GROUP * GROUPS_PR_INSTRUCTOR;
             sem_init(&submission, 0, 0);
@@ -111,20 +105,20 @@ void *group_behaviour(void *param) {
     sem_wait(&mutex);
     if (chairs.taken < NUM_CHAIRS){
         take_chair(&chairs, *group);
-        printf("Group %c takes a chair in waiting room.\t\t\t\tTaken chairs = %d/%d\n", group->name, chairs.taken, NUM_CHAIRS);
+        printf(WELCOME_MSG, group->name, chairs.taken, NUM_CHAIRS);
         sem_post(&mutex);
 
         // wait for available instructory
         sem_wait(&availableInstructor);
 
         // group in escape room, tries to solve mystery together with n other groups
-        for (int i = 0; i < ANSWERS_PR_GROUP; i++){
+        for (int i = 0, updated; i < ANSWERS_PR_GROUP; i++){
             sem_wait(&mysteryKey);
-            int temp = mystery - 1;
-            printf("Group %c changes global mystery %d -> %d\n", group->name, mystery, temp);
-            mystery = temp;
+            updated = mystery - 1;
+            printf(ANSWER_MSG, group->name, mystery, updated);
+            mystery = updated;
             sem_post(&mysteryKey);
-            sleep((unsigned int) 2);
+            sleep(2);
         }
 
         // submit solution to instructor
@@ -133,27 +127,31 @@ void *group_behaviour(void *param) {
     }
     else {
         sem_post(&mutex);
-        printf("Group %c cannot find a free chair and leaves!\n", group->name);
+        printf(NO_FREE_CHAIR_MSG, group->name);
         pthread_exit(&group->id);
     }
 }
 
-Instructor * getInstructor(pthread_t pID) {
+Instructor *getInstructor(pthread_t pID) {
     for (int i = 0; i < NUM_INSTRUCTORS; ++i)
         if (instructors[i].id == pID)
             return &instructors[i];
 }
 
-Group * getGroup(pthread_t pID) {
+Group *getGroup(pthread_t pID) {
     for (int i = 0; i < NUM_GROUPS; ++i)
         if (groups[i].id == pID)
             return &groups[i];
 }
 
 void goodbye(char *status, Group *group) {
-    strcmp(status, "winner") == 0 ? printf("Congratulations ") : printf("Unlucky ");
-    for (int i = 0; i < GROUPS_PR_INSTRUCTOR; i++) printf("group %c ",group[i].name);
-    strcmp(status, "winner") == 0 ? printf("The mystery is solved!\n") : printf("The mystery is NOT solved!\n");
-}
+    int statusIsWinner = strcmp(status, WINNER) == 0;
 
-#pragma clang diagnostic pop
+    if (statusIsWinner) printf("%s", CONGRATULATIONS_MSG);
+    else printf("%s", UNLUCKY_MSG);
+
+    for (int i = 0; i < GROUPS_PR_INSTRUCTOR; i++) printf(GROUP_NAME_MSG, group[i].name);
+
+    if (statusIsWinner) printf("%s", MYSTERY_SOLVED_MSG);
+    else printf("%s", MYSTERY_FAILED_MSG);
+}

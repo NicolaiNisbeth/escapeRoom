@@ -1,7 +1,3 @@
-//
-// Created by nicolainisbeth on 15/10/2019.
-//
-
 #ifndef ESCAPEROOM_OBJECTS_H
 #define ESCAPEROOM_OBJECTS_H
 

@@ -1,10 +1,7 @@
-//
-// Created by nicolainisbeth on 16/10/2019.
-//
-
 #ifndef ESCAPEROOM_QUEUE_H
 #define ESCAPEROOM_QUEUE_H
 #include "objects.h"
+#include "stringStore.h"
 #include <stdlib.h>
 #include <semaphore.h>
 #include <pthread.h>
@@ -19,7 +16,7 @@ sem_t* createSemaphore(int value);
 /**
  * Initialise queue
  * @param size
- * @return queue
+ * @return queue pointer to initialised queue
  */
 Queue* init_queue(int size){
     Queue *queue = (Queue *) malloc(sizeof(Queue));
@@ -33,7 +30,7 @@ Queue* init_queue(int size){
 }
 
 /**
- * Enqueue element to tail in queue
+ * Enqueue group to tail in queue
  * @param queue
  * @param group
  */
@@ -42,7 +39,7 @@ void take_chair(Queue *queue, Group group){
 
     if (full(queue)){
         sem_post(queue->mutex);
-        perror("chair is already full!"), exit(1);
+        perror(FULL_QUEUE_MSG), exit(1);
     }
     else {
         queue->array[queue->tail] = group;
@@ -54,29 +51,29 @@ void take_chair(Queue *queue, Group group){
 }
 
 /**
- * Dequeue element from head
+ * Dequeue group from head
  * @param queue
- * @return dequeued element
+ * @return dequeued group
  */
 Group leave_chair(Queue *queue){
     sem_wait(queue->mutex);
 
     if (empty(queue)){
         sem_post(queue->mutex);
-        perror("Chair is already empty!"), exit(1);
+        perror(EMPTY_QUEUE_MSG), exit(1);
     }
     else {
-        Group element = queue->array[queue->head];
+        Group group = queue->array[queue->head];
         queue->head = queue_incr(queue, queue->head);
         queue->taken--;
         sem_post(queue->mutex);
 
-        return element;
+        return group;
     }
 }
 
 /**
- * Increments current value and returns updated value
+ * Increments current value and returns updated value, cyclically
  * @param queue
  * @param val current value
  * @return updated value

@@ -1,13 +1,10 @@
-So in your design somehow the arriving chairs can wake up the instructors.
 
-What if you change the design slightly and say that there are 2 identical escape rooms (code here becomes critical section)
-and it takes random time for the instructors(resource similar to global variable) to give clues(which are similar for both rooms)
+there are 2 identical escape rooms (code here becomes critical section)
+and it takes random time for the instructors to give clues(which are similar for both rooms)
 multiple times during the escape room game.
 
-The clues the instructors provides are sequential and if the one room gets the clues earlier the game is spoiled
-(race condition – similar to example shown in class with integer writing 21 instead of 40).
-The groups can check if the instructors is available book him for instruction (lock the instructors - some piece of code)
-which is common for both groups (I hope it makes sense otherwise please ask questions if anything is unclear)
+The clues the instructors provides are sequential and if the one room gets the clues earlier the game is spoiled(race condition).
+The groups can check if the instructors is available book him for instruction (lock the instructor).
 
 --------------------------------------------------------------------------------------------------------------------
 Flow
@@ -22,13 +19,3 @@ While instructors gives clues (changes global variable)
     else they won
 
 After 3 successful rounds of clues the teams escape the rooms!
-
-
-
-
-How does multithreading work?
-If two threads uses a single static data area, surprisingly results will be produced.
-This scenario is usually described as the race condition. A solution to race condition is have lock to the critial area.
-The critical area is data which multiple threads have access to and can write to.
-What is a thread scheduler?
-Thread scheduler determine which runnable thread to assign to the processor.

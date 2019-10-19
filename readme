@@ -1,21 +1,34 @@
+User manual
+    download the zip file myapp.zip
+	change directory to where the downloaded zip file is located
+	write the command "unzip myapp.zip" to unzip the file
+	write the command "gcc -o myapp myapp.c" to create an executable file myapp
+	write the command "./myapp" to execute the program
 
-there are 2 identical escape rooms (code here becomes critical section)
-and it takes random time for the instructors to give clues(which are similar for both rooms)
-multiple times during the escape room game.
+The name of the application is The Escape Room. The setting is two rooms, one waiting room and one escape room.
+N groups arrives periodically at the waiting room, takes a chair if any left, and waits for the instructor
+to invite k groups into the escape room. The instructor shares a mystery (integer) among the groups. The groups need to
+cooperate in order to decrement the mystery to 0, because each group only has a fixed number of decrements (answers).
+After the groups have used all their answers the final result is submitted to the instructor. The instructor compares
+the submission with the solution and announces whether or not the groups solved the mystery before inviting a new set
+of groups to the escape room.
+This sequence of events continues until the last group leaves the escape room.
 
-The clues the instructors provides are sequential and if the one room gets the clues earlier the game is spoiled(race condition).
-The groups can check if the instructors is available book him for instruction (lock the instructor).
+The application achieves multithreading by allowing n groups (threads) to simultaneously compete for chairs in the
+waiting room upon arrival. Followed by k groups in turn decrementing a shared mystery, introduced by an instructor thread,
+in the escape room.
+Every time a shared (global) variable comes into play, mutual exclusion needs to be accounted for to avoid race
+conditions.
 
---------------------------------------------------------------------------------------------------------------------
-Flow
+Mutual exclusion is secured by multiple semaphores because of multiple critical sections. When a variable like chairs
+can be read and written to by multiple threads at the same time, a lock needs to be acquired to ensure an atomic operation
+(read followed by a write) and released thereafter. Otherwise one thread can write after another thread have read the value
+resulting in a wrong answer.
 
-chairs(thread) enters and enqueues
-When chairs size >= 2
-    then instructors welcomes two groups to their respective escape room, inEscapeRoom=true and 2x leave_chair and assigns a team odd and team even
-    else sleep
+My application does not use threads to enhance performance but strictly for educational purposes. Therefore every time
+the shared variable chairs is modified, the new value is printed to console. The same when k groups are cooperating to
+solve the mystery, each group prints out in the console the current value of the mystery and after they decremented it.
 
-While instructors gives clues (changes global variable)
-    if teamOdd reads and even or teamEven reads and odd, then the teams lost (Each team is not supposed to read the same clues!)
-    else they won
-
-After 3 successful rounds of clues the teams escape the rooms!
+The user is welcome to change a number of variables to create interesting scenarios as long as the conditions are
+fulfilled. The conditions are stated in the top of myapp.c and leaves room for modifying NUM_CHAIRS, NUM_GROUPS,
+GROUPS_PR_INSTRUCTOR and ANSWERS_PR_GROUP

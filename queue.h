@@ -1,7 +1,7 @@
 #ifndef ESCAPEROOM_QUEUE_H
 #define ESCAPEROOM_QUEUE_H
 #include "objects.h"
-#include "stringStore.h"
+#include "stringstore.h"
 #include <stdlib.h>
 #include <semaphore.h>
 #include <pthread.h>
@@ -15,10 +15,10 @@ sem_t* createSemaphore(int value);
 
 /**
  * Initialise queue
- * @param size
+ * @param size of queue
  * @return queue pointer to initialised queue
  */
-Queue* init_queue(int size){
+Queue* setup_chairs(int size){
     Queue *queue = (Queue *) malloc(sizeof(Queue));
     queue->size = size;
     queue->array = (Group *) malloc(size * sizeof(Group));
@@ -73,7 +73,7 @@ Group leave_chair(Queue *queue){
 }
 
 /**
- * Increments current value and returns updated value, cyclically
+ * Increment current value and return updated value, cyclically
  * @param queue
  * @param val current value
  * @return updated value
@@ -99,7 +99,7 @@ int empty(Queue *queue){
 }
 
 /**
- * Creates a semaphore by allocating memory and initializing it.
+ * Creates a semaphore by allocating memory and initializing it
  * @param value
  * @return pointer to initialised semaphore
  */

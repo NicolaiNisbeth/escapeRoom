@@ -4,4 +4,4 @@ project(escapeRoom C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS -pthread)
 
-add_executable(escapeRoom main.c objects.h queue.h stringStore.h)
+add_executable(escapeRoom myapp.c objects.h queue.h stringstore.h)

@@ -7,7 +7,7 @@
 
 char *NAMES[] = {"Alicia", "Jessica", "Rachel", "Linda"};
 char *INSTRUCTOR_MSG = "Instructor %s welcomes %c to the escape room\t\t\t\t\t\t\t\t\t\t\t\tTaken chairs = %d/%d\n";
-char *WELCOME_MSG = "Group %c takes a chair in waiting room\t\t\t\t\t\t\t\t\t\t\t\t\t\tTaken chairs = %d/%d\n";
+char *WELCOME_MSG = "Group %c takes a chair in waiting room\t\t\t\t\t\t\t\t\t\t\t\t\tTaken chairs = %d/%d\n";
 char *ANSWER_MSG = "Group %c changes global mystery %d -> %d\n";
 char *NO_FREE_CHAIR_MSG = "Group %c cannot find a free chair and leaves!\n";
 char *WINNER = "winner";

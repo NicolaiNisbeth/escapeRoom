@@ -2,7 +2,7 @@ User manual
     download the zip file myapp.zip
 	change directory to where the downloaded zip file is located
 	write the command "unzip myapp.zip" to unzip the file
-	write the command "gcc -o myapp myapp.c" to create an executable file myapp
+	write the command "gcc -pthread -o myapp myapp.c" to create an executable file myapp
 	write the command "./myapp" to execute the program
 
 The application is implemented in the programming language C (version C11) and is intended for Unix systems.

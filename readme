@@ -35,3 +35,26 @@ solve the mystery, each group prints out in the console the current value of the
 The user of this application is welcome to change a number of variables to create interesting scenarios as long as the
 conditions arefulfilled. The conditions are stated in the top of myapp.c and leaves room for modifying NUM_CHAIRS,
 NUM_GROUPS, GROUPS_PR_INSTRUCTOR and ANSWERS_PR_GROUP.
+
+Test:
+Without mutual exclusion by commenting out line 99 and line 103
+Group A changes global mystery 8 -> 7
+Group B changes global mystery 8 -> 7
+Group A changes global mystery 7 -> 6
+Group B changes global mystery 7 -> 6
+Group A changes global mystery 6 -> 5
+Group B changes global mystery 5 -> 4
+Group B changes global mystery 4 -> 3
+Group A changes global mystery 4 -> 3
+Unlucky group A group B The mystery is NOT solved!
+
+With mutual exclusion
+Group B changes global mystery 8 -> 7
+Group A changes global mystery 7 -> 6
+Group B changes global mystery 6 -> 5
+Group A changes global mystery 5 -> 4
+Group B changes global mystery 4 -> 3
+Group A changes global mystery 3 -> 2
+Group B changes global mystery 2 -> 1
+Group A changes global mystery 1 -> 0
+Congratulations group A group B The mystery is solved!

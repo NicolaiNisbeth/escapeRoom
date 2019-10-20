@@ -5,6 +5,9 @@ User manual
 	write the command "gcc -o myapp myapp.c" to create an executable file myapp
 	write the command "./myapp" to execute the program
 
+The application is implemented in the programming language C (version C11) and is intended for Unix systems.
+The application uses <pthread.h> for threads and <semaphore.h> for semaphores.
+
 The name of the application is The Escape Room. The setting is two rooms, one waiting room and one escape room.
 N groups arrives periodically at the waiting room, takes a chair if any left, and waits for the instructor
 to invite k groups into the escape room. The instructor shares a mystery (integer) among the groups. The groups need to

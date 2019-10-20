@@ -1,0 +1,7 @@
+(1)
+The Little Book of Semaphores. The barbershop problem.
+Retrived 17 October 2019, http://greenteapress.com/semaphores/LittleBookOfSemaphores.pdf
+
+(2)
+IBM. (2004, January 21). Basis use of pthreads.
+Retrived 16 Octobrt, from https://www.ibm.com/developerworks/library/l-pthred/index.html

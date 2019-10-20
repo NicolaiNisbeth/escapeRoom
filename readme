@@ -32,6 +32,6 @@ My application does not use threads to enhance performance but strictly for educ
 the shared variable chairs is modified, the new value is printed to the console. The same when k groups are cooperating to
 solve the mystery, each group prints out in the console the current value of the mystery and after they decremented it.
 
-The user is welcome to change a number of variables to create interesting scenarios as long as the conditions are
-fulfilled. The conditions are stated in the top of myapp.c and leaves room for modifying NUM_CHAIRS, NUM_GROUPS,
-GROUPS_PR_INSTRUCTOR and ANSWERS_PR_GROUP.
+The user of this application is welcome to change a number of variables to create interesting scenarios as long as the
+conditions arefulfilled. The conditions are stated in the top of myapp.c and leaves room for modifying NUM_CHAIRS,
+NUM_GROUPS, GROUPS_PR_INSTRUCTOR and ANSWERS_PR_GROUP.

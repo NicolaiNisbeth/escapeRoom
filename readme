@@ -8,30 +8,30 @@ User manual
 The application is implemented in the programming language C (version C11) and is intended for Unix systems.
 The application uses <pthread.h> for threads and <semaphore.h> for semaphores.
 
-The name of the application is The Escape Room. The setting is two rooms, one waiting room and one escape room.
+The idea behind the application is an Escape Room. The setting is two rooms, one waiting room and one escape room.
 N groups arrives periodically at the waiting room, takes a chair if any left, and waits for the instructor
 to invite k groups into the escape room. The instructor shares a mystery (integer) among the groups. The groups need to
 cooperate in order to decrement the mystery to 0, because each group only has a fixed number of decrements (answers).
-After the groups have used all their answers the final result is submitted to the instructor. The instructor compares
+After the groups have used all their answers, the final result is submitted to the instructor. The instructor compares
 the submission with the solution and announces whether or not the groups solved the mystery before inviting a new set
 of groups to the escape room.
 This sequence of events continues until the last group leaves the escape room.
 
 The application achieves multithreading by allowing n groups (threads) to simultaneously compete for chairs in the
-waiting room upon arrival. Followed by k groups in turn decrementing a shared mystery, introduced by an instructor thread,
-in the escape room.
+waiting room upon arrival. Followed by k groups - in turn -  decrementing a shared mystery, introduced by an instructor
+thread, in the escape room.
 Every time a shared (global) variable comes into play, mutual exclusion needs to be accounted for to avoid race
 conditions.
 
 Mutual exclusion is secured by multiple semaphores because of multiple critical sections. When a variable like chairs
-can be read and written to by multiple threads at the same time, a lock needs to be acquired to ensure an atomic operation
+can be read from and written to by multiple threads at the same time, a lock needs to be acquired to ensure an atomic operation
 (read followed by a write) and released thereafter. Otherwise one thread can write after another thread have read the value
 resulting in a wrong answer.
 
-My application does not use threads to enhance performance but strictly for educational purposes. Therefore every time
-the shared variable chairs is modified, the new value is printed to console. The same when k groups are cooperating to
+My application does not use threads to enhance performance but strictly for educational purposes. Therefore any time
+the shared variable chairs is modified, the new value is printed to the console. The same when k groups are cooperating to
 solve the mystery, each group prints out in the console the current value of the mystery and after they decremented it.
 
 The user is welcome to change a number of variables to create interesting scenarios as long as the conditions are
 fulfilled. The conditions are stated in the top of myapp.c and leaves room for modifying NUM_CHAIRS, NUM_GROUPS,
-GROUPS_PR_INSTRUCTOR and ANSWERS_PR_GROUP
+GROUPS_PR_INSTRUCTOR and ANSWERS_PR_GROUP.

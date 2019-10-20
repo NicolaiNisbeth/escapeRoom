@@ -39,33 +39,35 @@ void goodbye(char *status, Group *group);
  * Chairs are set up, semaphores are initialised to secure mutual exclusion
  * among threads.
  * One instructor thread is given a name and a behaviour.
- * N Groups arrive periodically, assigned a name and a behaviour.
+ * N Groups arrive periodically, each is assigned a name and a behaviour.
  * The instructor closes when the last group leaves the escape room.
  *
  * @return exit code
  */
 int main(void) {
+    // chairs are implemented as a queue, FIFO
     chairs = *setup_chairs(NUM_CHAIRS);
 
-    // Initialize semaphores
+    // initialize semaphores
     sem_init(&availableInstructor, 0, 0);
     sem_init(&mysteryKey, 0, 0);
     sem_init(&submission, 0, 0);
     sem_init(&chairsKey, 0, 1);
 
-    // Create instructor thread
+    // create instructor thread
     for (int i = 0; i < NUM_INSTRUCTORS; i++){
         instructors[i].name = &NAMES[0][i];
         pthread_create(&instructors[i].id, NULL, instructor_behaviour, NULL);
     }
 
-    // Create group threads
+    // create group threads
     for (int i = 0, name = 'A'; i < NUM_GROUPS; i++, name++){
         groups[i].name = (char) name;
         pthread_create(&groups[i].id, NULL, group_behaviour, NULL);
         sleep(rand() % 2);
     }
 
+    // close down after last group leaves the escape room
     for (int i = 0; i < NUM_GROUPS; i++) pthread_join(groups[i].id, NULL);
 
     exit(0);
@@ -73,7 +75,7 @@ int main(void) {
 
 /**
  * Group arrives and takes a chair if available else leaves!
- * Group with chair awaits instructor's invitation to escape room
+ * Groups with chair await instructor's invitation to escape room
  * In escape room the group has a fixed number of answers. For
  * each answer the group decrements the shared mystery. The group
  * finally submits the solution to the instructor before exiting
@@ -102,7 +104,7 @@ void *group_behaviour() {
             sleep(2);
         }
 
-        // submit solution to instructor
+        // submit solution to instructor and leave
         sem_post(&submission);
         pthread_exit(&group->id);
     }
@@ -115,8 +117,7 @@ void *group_behaviour() {
 
 /**
  * Instructor keeps checking until enough chairs have been taken.
- * Once enough, the instructor invites n groups to escape room and
- * releases mystery.
+ * Then the instructor invites n groups to escape room and releases mystery.
  * The instructor awaits the groups' submission, checks if the groups
  * solved the mystery, cleans up after them and does everything all over again.
  */

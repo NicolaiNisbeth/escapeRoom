@@ -35,6 +35,7 @@ Queue* setup_chairs(int size){
  * @param group
  */
 void take_chair(Queue *queue, Group group){
+    // wait for access to modify queue
     sem_wait(queue->mutex);
 
     if (full(queue)){
@@ -56,6 +57,7 @@ void take_chair(Queue *queue, Group group){
  * @return dequeued group
  */
 Group leave_chair(Queue *queue){
+    // wait for access to modify queue
     sem_wait(queue->mutex);
 
     if (empty(queue)){
